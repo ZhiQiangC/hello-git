@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.finance.dao.FinanceTypeMapper">
+	<resultMap type="com.finance.entity.FinanceTypeEntity" id="financingTypeMap">
+		<id column="ID" property="id" jdbcType="VARCHAR" />
+		<result column="TYPE_NUMBER" property="typeNumber" jdbcType="VARCHAR" />
+		<result column="TYPE_NAME" property="typeName" jdbcType="VARCHAR" />
+		<result column="IS_USING" property="isUsing" jdbcType="VARCHAR" />
+		<result column="UPDATE_USER_ID" property="updateUserId" jdbcType="VARCHAR" />
+		<result column="UPDATE_USER_NAME" property="updateUserName" jdbcType="VARCHAR" />
+		<result column="UPDATE_TIME" property="updateTime" jdbcType="DATE" />
+		<result column="CREATE_TIME" property="createTime" jdbcType="DATE" />
+	</resultMap>
+
+	<sql id="financingTypeSql">
+		ID,
+		TYPE_NUMBER,
+		TYPE_NAME,
+		IS_USING,
+		UPDATE_USER_ID,
+		UPDATE_USER_NAME,
+		UPDATE_TIME,
+		CREATE_TIME
+	</sql>
+	<select id="selectTypeAll" resultMap="financingTypeMap">
+		select
+		<include refid="financingTypeSql" />
+		from ZHPH_FINANCING_TYPE
+	</select>
+	
+	<select id="selectByID" resultMap="financingTypeMap" parameterType="String">
+		SELECT
+			<include refid="financingTypeSql"></include>
+		FROM ZHPH_FINANCING_TYPE WHERE ID = #{id}
+	</select>
+
+	<select id="selectTwoTypeNumber" parameterType="Map" resultType="String">
+		SELECT
+		COUNT(*)
+		FROM
+		ZHPH_FINANCING_TYPE
+		WHERE 1=1
+		<if test="typeNumber != null and typeNumber != ''">
+			AND TYPE_NUMBER = ${typeNumber}
+		</if>
+		AND IS_USING = '1'
+	</select>
+	<select id="selectTwoTypeName" parameterType="Map" resultType="String">
+		SELECT
+		COUNT(*)
+		FROM
+		ZHPH_FINANCING_TYPE
+		WHERE 1=1
+		<if test="typeName != null and typeName != ''">
+			AND TYPE_NAME = ${typeName}
+		</if>
+		<if test="id != null and id != ''">
+			AND ID != #{id}
+		</if>
+		AND IS_USING = '1'
+	</select>
+
+	<select id="selectList" resultMap="financingTypeMap" parameterType="map">
+		SELECT * FROM(
+			SELECT X.*,ROWNUM RN FROM (
+				SELECT
+					<include refid="financingTypeSql"></include>
+				FROM ZHPH_FINANCING_TYPE
+				WHERE 1=1
+				<if test="typeNumber != null and typeNumber != ''">
+					AND TYPE_NUMBER = '${typeNumber}'
+				</if>
+				<if test="typeName != null and typeName != ''">
+					AND TYPE_NAME LIKE '%${typeName}%'
+				</if>
+				ORDER BY CREATE_TIME DESC
+			)X WHERE ROWNUM &lt;= #{endIndex}
+		)Y WHERE RN >= #{startIndex}
+	</select>
+
+	<select id="selectListCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM 
+			ZHPH_FINANCING_TYPE
+		WHERE 1=1
+			<if test="typeNumber != null and typeNumber != ''">
+				AND TYPE_NUMBER = '${typeNumber}'
+			</if>
+			<if test="typeName != null and typeName != ''">
+				AND TYPE_NAME LIKE '%${typeName}%'
+			</if>
+	</select>
+	
+	<select id="selectListAll" resultMap="financingTypeMap">
+		SELECT
+			<include refid="financingTypeSql"></include>
+		FROM ZHPH_FINANCING_TYPE
+	</select>
+	
+	<delete id="deleteTrue" parameterType="java.lang.String">
+		delete from ZHPH_FINANCING_TYPE
+		where ID = #{id,jdbcType=VARCHAR}
+	</delete>
+	
+   	<update id="updateByPrimaryKey" parameterType="com.finance.entity.FinanceTypeEntity">
+   		update ZHPH_FINANCING_TYPE
+			set 
+		<if test="typeName != null and typeName != ''">
+			 TYPE_NAME = #{typeName,jdbcType=VARCHAR},
+		</if>
+		<if test="isUsing != null and isUsing != ''">
+			 IS_USING = #{isUsing,jdbcType=VARCHAR},
+		</if>
+			 UPDATE_USER_ID = #{updateUserId,jdbcType=VARCHAR},
+			 UPDATE_USER_NAME = #{updateUserName,jdbcType=VARCHAR},
+			 UPDATE_TIME = sysdate
+			
+		where ID = #{id,jdbcType=VARCHAR}
+   	</update>
+   	
+   	<insert id="insert">
+			<selectKey keyProperty="id" resultType="String" order="BEFORE">
+				select sys_guid() from dual
+			</selectKey>
+			INSERT INTO ZHPH_FINANCING_TYPE(
+				ID,TYPE_NUMBER,TYPE_NAME,IS_USING,CREATE_TIME,UPDATE_USER_ID,UPDATE_USER_NAME,UPDATE_TIME )
+			VALUES(
+				#{id,jdbcType=VARCHAR},
+				#{typeNumber,jdbcType=VARCHAR},
+				#{typeName,jdbcType=INTEGER},
+				#{isUsing,jdbcType=VARCHAR},
+				sysdate,
+				#{updateUserId,jdbcType=VARCHAR},
+				#{updateUserName,jdbcType=VARCHAR},
+				sysdate
+			)
+	</insert>
+</mapper>

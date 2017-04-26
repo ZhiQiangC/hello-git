@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.finance.dao.FinanceChannelMapper">
+	<resultMap type="com.finance.entity.FinanceChannelEntity" id="financingChannelMap">
+		<id column="ID" property="id" jdbcType="VARCHAR" />
+		<result column="CHANNEL_NUMBER" property="channelNumber" jdbcType="VARCHAR" />
+		<result column="CHANNEL_NAME" property="channelName" jdbcType="VARCHAR" />
+		<result column="IS_SUPPORT_IMPORT" property="isSupportImport" jdbcType="VARCHAR" />
+		<result column="IS_USING" property="isUsing" jdbcType="VARCHAR" />
+		<result column="UPDATE_USER_ID" property="updateUserId" jdbcType="VARCHAR" />
+		<result column="UPDATE_USER_NAME" property="updateUserName" jdbcType="VARCHAR" />
+		<result column="UPDATE_TIME" property="updateTime" jdbcType="DATE" />
+		<result column="CREATE_TIME" property="createTime" jdbcType="DATE" />
+	</resultMap>
+
+	<sql id="financingChannelSql">
+		ID,
+		CHANNEL_NUMBER,
+		CHANNEL_NAME,
+		IS_SUPPORT_IMPORT,
+		IS_USING,
+		UPDATE_USER_ID,
+		UPDATE_USER_NAME,
+		UPDATE_TIME,
+		CREATE_TIME
+	</sql>
+    <select id="selectAll" resultMap="financingChannelMap">
+        select
+        <include refid="financingChannelSql" />
+        from ZHPH_FINANCING_CHANNEL
+    </select>
+	<select id="selectByID" resultMap="financingChannelMap" parameterType="String">
+		SELECT
+			<include refid="financingChannelSql"></include>
+		FROM ZHPH_FINANCING_CHANNEL WHERE ID = #{id}
+	</select>
+
+	<select id="isTrueChannelNumber" parameterType="Map" resultType="String">
+		SELECT
+			COUNT(*)
+		FROM 
+			ZHPH_FINANCING_CHANNEL
+		WHERE 1=1
+		<if test="channelNumber != null and channelNumber != ''">
+			AND CHANNEL_NUMBER = ${channelNumber}
+		</if>
+		AND IS_USING = '1'
+	</select>
+	<select id="isTrueChannelName" parameterType="Map" resultType="String">
+		SELECT
+		COUNT(*)
+		FROM
+		ZHPH_FINANCING_CHANNEL
+		WHERE 1=1
+		<if test="channelName != null and channelName != ''">
+			AND CHANNEL_NAME = ${channelName}
+		</if>
+		<if test="id != null and id != ''">
+			AND ID != #{id}
+		</if>
+		AND IS_USING = '1'
+	</select>
+	<select id="selectList" resultMap="financingChannelMap" parameterType="map">
+		SELECT * FROM(
+			SELECT X.*,ROWNUM RN FROM (
+				SELECT
+					<include refid="financingChannelSql"></include>
+				FROM ZHPH_FINANCING_CHANNEL
+				WHERE 1=1
+				<if test="channelNumber != null and channelNumber != ''">
+					AND CHANNEL_NUMBER = '${channelNumber}'
+				</if>
+				<if test="channelName != null and channelName != ''">
+					AND CHANNEL_NAME LIKE '%${channelName}%'
+				</if>
+				ORDER BY CREATE_TIME DESC
+			)X WHERE ROWNUM &lt;= #{endIndex}
+		)Y WHERE RN >= #{startIndex}
+	</select>
+
+	<select id="selectListCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(1)
+		FROM 
+			ZHPH_FINANCING_CHANNEL
+		WHERE 1=1
+			<if test="channelNumber != null and channelNumber != ''">
+				AND CHANNEL_NUMBER = '${channelNumber}'
+			</if>
+			<if test="channelName != null and channelName != ''">
+				AND CHANNEL_NAME LIKE '%${channelName}%'
+			</if>
+	</select>
+	<select id="selectListAll" resultMap="financingChannelMap">
+		SELECT
+			<include refid="financingChannelSql"></include>
+		FROM ZHPH_FINANCING_CHANNEL
+	</select>
+	
+	<delete id="deleteTrue" parameterType="java.lang.String">
+		delete from ZHPH_FINANCING_CHANNEL
+		where ID = #{id,jdbcType=VARCHAR}
+	</delete>
+	
+   	<update id="updateByPrimaryKey" parameterType="com.finance.entity.FinanceChannelEntity">
+   		update ZHPH_FINANCING_CHANNEL
+			set 
+		<if test="channelName != null and channelName != ''">
+			 CHANNEL_NAME = #{channelName,jdbcType=VARCHAR},
+		</if>
+		<if test="isUsing != null and isUsing != ''">
+			 IS_USING = #{isUsing,jdbcType=VARCHAR},
+		</if>
+			 UPDATE_USER_ID = #{updateUserId,jdbcType=VARCHAR},
+			 UPDATE_USER_NAME = #{updateUserName,jdbcType=VARCHAR},
+			 UPDATE_TIME = sysdate
+			
+		where ID = #{id,jdbcType=VARCHAR}
+   	</update>
+   	
+   	<insert id="insert">
+			<selectKey keyProperty="id" resultType="String" order="BEFORE">
+				select sys_guid() from dual
+			</selectKey>
+			INSERT INTO ZHPH_FINANCING_CHANNEL(
+				ID,CHANNEL_NUMBER,CHANNEL_NAME,IS_SUPPORT_IMPORT,UPDATE_USER_ID,UPDATE_USER_NAME,UPDATE_TIME,IS_USING,CREATE_TIME )
+			VALUES(
+				#{id,jdbcType=VARCHAR},
+				#{channelNumber,jdbcType=VARCHAR},
+				#{channelName,jdbcType=VARCHAR},
+				#{isSupportImport,jdbcType=VARCHAR},
+				#{updateUserId,jdbcType=VARCHAR},
+                #{updateUserName,jdbcType=VARCHAR},
+                sysdate,
+				#{isUsing,jdbcType=VARCHAR},
+				sysdate
+			)
+	</insert>
+</mapper>
